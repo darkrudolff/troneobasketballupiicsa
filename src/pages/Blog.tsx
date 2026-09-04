@@ -6,14 +6,12 @@ const DRIVE_GALLERY_API_URL = 'https://script.google.com/macros/s/AKfycbzJwREzzV
 // URL de tu Google Apps Script para guardar registros en Google Sheets
 const GOOGLE_SCRIPT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx279lbXsP32ZTUM6z-Ao6_1UEhPj_ViCQ79uPXCbnw8epduiqgbOe2Nlj8yHZ5rkLb/exec';
 
-
 interface FormData {
-  teamName: string;
-  captainName: string;
+  coachName: string;
+  managerName: string;
   email: string;
   phone: string;
-  category: string;
-  numPlayers: number;
+  branch: string;
 }
 
 interface StatusMessage {
@@ -28,7 +26,6 @@ interface GalleryImage {
   description?: string;
 }
 
-// Colección de fotos de Unsplash (Básquetbol) para usar de respaldo o pruebas
 const UNSPLASH_FALLBACK_PHOTOS = [
   'https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=800&auto=format&fit=crop',
   'https://images.unsplash.com/photo-1519861531473-9200262188bf?q=80&w=800&auto=format&fit=crop',
@@ -39,31 +36,25 @@ const UNSPLASH_FALLBACK_PHOTOS = [
 ];
 
 export default function TournamentLanding(): React.ReactElement {
-  // Estado de la Galería Dinámica
   const [gallery, setGallery] = useState<GalleryImage[]>([]);
   const [loadingGallery, setLoadingGallery] = useState<boolean>(true);
   const [activeIndex, setActiveIndex] = useState<number>(0);
 
-  // Ref para el contenedor del carrusel en móvil
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  // Estado del Formulario
   const [formData, setFormData] = useState<FormData>({
-    teamName: '',
-    captainName: '',
+    coachName: '',
+    managerName: '',
     email: '',
     phone: '',
-    category: 'Varonil Libre',
-    numPlayers: 5,
+    branch: 'Varonil',
   });
 
   const [loadingForm, setLoadingForm] = useState<boolean>(false);
   const [formMessage, setFormMessage] = useState<StatusMessage | null>(null);
 
-  // Estado del Modal Lightbox
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
 
-  // Carga automática de la Galería
   useEffect(() => {
     async function fetchDriveGallery() {
       try {
@@ -74,11 +65,9 @@ export default function TournamentLanding(): React.ReactElement {
         if (json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
           setGallery(json.data);
         } else {
-          console.warn('Drive retornó una lista vacía o con errores, cargando Unsplash...');
           loadUnsplashFallback();
         }
       } catch (err) {
-        console.error('Error al conectar con Drive API, usando Unsplash:', err);
         loadUnsplashFallback();
       } finally {
         setLoadingGallery(false);
@@ -88,18 +77,16 @@ export default function TournamentLanding(): React.ReactElement {
     fetchDriveGallery();
   }, []);
 
-  // Carga imágenes por defecto desde Unsplash si falla la API
   const loadUnsplashFallback = () => {
     const fallbackData: GalleryImage[] = UNSPLASH_FALLBACK_PHOTOS.map((url, index) => ({
       id: `unsplash-${index}`,
-      driveId: url, // Guarda la URL directa de Unsplash
+      driveId: url,
       title: `Torneo Basket - Foto ${index + 1}`,
       description: 'Imagen destacada de las jornadas del torneo de básquetbol.',
     }));
     setGallery(fallbackData);
   };
 
-  // Detectar el índice de la foto activa al hacer scroll en móvil
   const handleScroll = () => {
     if (!carouselRef.current) return;
     const { scrollLeft, clientWidth } = carouselRef.current;
@@ -109,7 +96,6 @@ export default function TournamentLanding(): React.ReactElement {
     }
   };
 
-  // Función para desplazar manualmente el carrusel en móvil
   const scrollToIndex = (index: number) => {
     if (!carouselRef.current) return;
     const clientWidth = carouselRef.current.clientWidth;
@@ -121,10 +107,10 @@ export default function TournamentLanding(): React.ReactElement {
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'number' ? Number(value) : value,
+      [name]: value,
     }));
   };
 
@@ -146,16 +132,15 @@ export default function TournamentLanding(): React.ReactElement {
 
       setFormMessage({
         type: 'success',
-        text: '¡Registro exitoso! Los datos del equipo fueron guardados.',
+        text: '¡Registro exitoso! Los documentos adjuntos fueron enviados al correo proporcionado.',
       });
 
       setFormData({
-        teamName: '',
-        captainName: '',
+        coachName: '',
+        managerName: '',
         email: '',
         phone: '',
-        category: 'Varonil Libre',
-        numPlayers: 5,
+        branch: 'Varonil',
       });
     } catch (error) {
       console.error(error);
@@ -168,81 +153,101 @@ export default function TournamentLanding(): React.ReactElement {
     }
   };
 
-  // Formatear la URL de la imagen (Soporta Google Drive y Unsplash)
   const getImageUrl = (driveIdOrUrl: string) => {
     if (driveIdOrUrl.startsWith('http://') || driveIdOrUrl.startsWith('https://')) {
       return driveIdOrUrl;
     }
-    // Formato de proxy directo para Google Drive
     return `https://lh3.googleusercontent.com/d/${driveIdOrUrl}`;
   };
 
-  // Manejador de error individual de imagen (Si la foto de Drive falla, la cambia por Unsplash)
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, index: number) => {
     const target = e.currentTarget;
     const fallbackUrl = UNSPLASH_FALLBACK_PHOTOS[index % UNSPLASH_FALLBACK_PHOTOS.length];
-    
-    // Evita bucles infinitos si Unsplash también fallara
     if (target.src !== fallbackUrl) {
       target.src = fallbackUrl;
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-orange-500 selection:text-white">
+    <div className="min-h-screen bg-[#111111] text-neutral-100 font-sans selection:bg-[#BC955C] selection:text-black">
       
-      {/* HERO SECTION */}
-      <header className="relative py-16 px-4 sm:px-8 border-b border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 text-center">
+      {/* BARRA SUPERIOR INSTITUCIONAL CON LOGOS MÁS GRANDES */}
+      <div className="bg-[#4A121A] text-white py-4 px-6 border-b border-[#BC955C]">
+        <div className="max-w-6xl mx-auto flex justify-between items-center gap-4">
+          
+          {/* Logo Izquierdo: IPN */}
+          <div className="flex items-center">
+            <img 
+              src="https://ipn.mx/assets/files/main/img/template/header/logo-ipn-horizontal.svg" 
+              alt="Logo IPN" 
+              className="h-12 sm:h-16 md:h-28 w-auto object-contain brightness-0 invert transition-all"
+            />
+          </div>
+
+          {/* Texto central en pantallas medianas / grandes */}
+          <div className="text-xs sm:text-sm text-[#BC955C] font-bold tracking-widest uppercase text-center hidden md:block">
+            CONVOCATORIA OFICIAL DEPORTIVA 2026
+          </div>
+
+          {/* Logo Derecho: UPIICSA */}
+          <div className="flex items-center">
+            <img 
+              src="https://upiicsa.ipn.mx/assets/files/upiicsa/img/inicio/icon-upiicsa.png" 
+              alt="Logo UPIICSA" 
+              className="h-14 sm:h-18 md:h-28 w-auto object-contain drop-shadow-lg transition-all"
+            />
+          </div>
+
+        </div>
+      </div>
+
+      {/* HERO HEADER */}
+      <header className="relative py-14 px-4 sm:px-8 bg-gradient-to-b from-[#6B1D2F] to-[#4A121A] text-center border-b-4 border-[#BC955C] shadow-xl">
         <div className="max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-semibold uppercase tracking-wider mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#BC955C]/20 border border-[#BC955C] text-[#D4C19C] text-xs font-bold uppercase tracking-widest mb-4">
             <span>🏀</span>
             <span>Comunidad Deportiva UPIICSA</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white mb-4">
-            Torneo de Básquetbol <span className="text-orange-500">UPIICSA</span>
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white mb-3 uppercase">
+            Torneo de Básquetbol <span className="text-[#BC955C]">UPIICSA</span>
           </h1>
-          <p className="text-slate-400 text-base sm:text-lg max-w-2xl mx-auto">
-            Inscribe a tu equipo y consulta la galería de fotos en tiempo real.
+          <p className="text-neutral-200 text-base sm:text-lg max-w-2xl mx-auto font-light">
+            Inscribe a tu equipo, consulta la galería oficial y recibe el reglamento e información directo en tu correo.
           </p>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-12 space-y-20">
 
-        {/* ------------------------------------------------------------------ */}
-        {/* GALERÍA RESPONSIVA: CARRUSEL COMPACTO EN MÓVIL / GRID DESKTOP */}
-        {/* ------------------------------------------------------------------ */}
+        {/* GALERÍA */}
         <section>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-2 border-b border-neutral-800 pb-4">
             <div>
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                 Galería del Torneo
+              <h2 className="text-2xl font-black uppercase text-white flex items-center gap-2 tracking-wide">
+                Galería del Torneo
               </h2>
-              <p className="text-slate-400 text-sm mt-1">
-                Fotos e imágenes del torneo en vivo
+              <p className="text-neutral-400 text-sm mt-0.5">
+                Fotografías y momentos destacados de las jornadas deportivas
               </p>
             </div>
-            <span className="text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 self-start sm:self-auto flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Actualizado
+            <span className="text-xs text-[#D4C19C] bg-[#BC955C]/10 px-3 py-1.5 rounded-md border border-[#BC955C]/30 self-start sm:self-auto flex items-center gap-2 font-medium">
+              <span className="w-2 h-2 rounded-full bg-[#BC955C] animate-pulse"></span>
+              En Vivo
             </span>
           </div>
 
-          {/* Skeleton Loader */}
           {loadingGallery ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {[1, 2, 3].map((n) => (
-                <div key={n} className="h-56 sm:h-72 rounded-2xl bg-slate-900 border border-slate-800 animate-pulse" />
+                <div key={n} className="h-56 sm:h-72 rounded-xl bg-neutral-900 border border-neutral-800 animate-pulse" />
               ))}
             </div>
           ) : gallery.length === 0 ? (
-            <div className="text-center py-12 bg-slate-900/50 rounded-2xl border border-slate-800">
-              <p className="text-slate-400 text-sm">No hay imágenes disponibles por el momento.</p>
+            <div className="text-center py-12 bg-neutral-900/50 rounded-xl border border-neutral-800">
+              <p className="text-neutral-400 text-sm">No hay imágenes disponibles por el momento.</p>
             </div>
           ) : (
             <div className="relative">
-              
-              {/* CARRUSEL / GRID */}
               <div
                 ref={carouselRef}
                 onScroll={handleScroll}
@@ -262,9 +267,9 @@ export default function TournamentLanding(): React.ReactElement {
                       min-w-[65vw] sm:min-w-0
                       h-56 sm:h-72
                       snap-center shrink-0 sm:shrink
-                      group relative rounded-2xl overflow-hidden
-                      bg-slate-900/90 border border-slate-800 cursor-pointer shadow-lg
-                      transition-all duration-300 hover:border-orange-500/50 hover:shadow-orange-500/10
+                      group relative rounded-xl overflow-hidden
+                      bg-neutral-900 border border-neutral-800 cursor-pointer shadow-lg
+                      transition-all duration-300 hover:border-[#BC955C] hover:shadow-[#BC955C]/20
                       flex items-center justify-center p-2 sm:p-0
                     "
                   >
@@ -272,21 +277,18 @@ export default function TournamentLanding(): React.ReactElement {
                       src={getImageUrl(img.driveId)}
                       alt={img.title}
                       onError={(e) => handleImageError(e, idx)}
-                      className="w-full h-full object-contain sm:object-cover transition-transform duration-500 group-hover:scale-105 rounded-xl sm:rounded-none"
+                      className="w-full h-full object-contain sm:object-cover transition-transform duration-500 group-hover:scale-105 rounded-lg sm:rounded-none"
                       loading="lazy"
                     />
                     
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent opacity-90 transition-opacity pointer-events-none" />
                     
-                    {/* Sombra para el texto */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent opacity-90 transition-opacity pointer-events-none" />
-                    
-                    {/* Título y Descripción */}
                     <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 pointer-events-none">
-                      <h3 className="text-xs sm:text-sm font-bold text-white capitalize group-hover:text-orange-400 transition-colors line-clamp-1">
+                      <h3 className="text-xs sm:text-sm font-bold text-white capitalize group-hover:text-[#D4C19C] transition-colors line-clamp-1">
                         {img.title}
                       </h3>
                       {img.description && (
-                        <p className="text-[11px] sm:text-xs text-slate-300 mt-0.5 line-clamp-1 sm:line-clamp-2 leading-tight">
+                        <p className="text-[11px] sm:text-xs text-neutral-300 mt-0.5 line-clamp-1 sm:line-clamp-2 leading-tight font-light">
                           {img.description}
                         </p>
                       )}
@@ -295,14 +297,12 @@ export default function TournamentLanding(): React.ReactElement {
                 ))}
               </div>
 
-              {/* CONTROLES MÓVILES */}
               {gallery.length > 1 && (
                 <div className="flex sm:hidden items-center justify-between mt-3 px-2">
                   <button
                     onClick={() => scrollToIndex(Math.max(0, activeIndex - 1))}
                     disabled={activeIndex === 0}
-                    className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-30 active:scale-95 transition text-xs font-semibold"
-                    aria-label="Anterior"
+                    className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 disabled:opacity-30 active:scale-95 transition text-xs font-semibold"
                   >
                     ← Ant
                   </button>
@@ -314,10 +314,9 @@ export default function TournamentLanding(): React.ReactElement {
                         onClick={() => scrollToIndex(idx)}
                         className={`h-2 rounded-full transition-all duration-300 ${
                           activeIndex === idx
-                            ? 'w-5 bg-orange-500'
-                            : 'w-2 bg-slate-800 hover:bg-slate-700'
+                            ? 'w-5 bg-[#BC955C]'
+                            : 'w-2 bg-neutral-800 hover:bg-neutral-700'
                         }`}
-                        aria-label={`Ir a foto ${idx + 1}`}
                       />
                     ))}
                   </div>
@@ -325,8 +324,7 @@ export default function TournamentLanding(): React.ReactElement {
                   <button
                     onClick={() => scrollToIndex(Math.min(gallery.length - 1, activeIndex + 1))}
                     disabled={activeIndex === gallery.length - 1}
-                    className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-30 active:scale-95 transition text-xs font-semibold"
-                    aria-label="Siguiente"
+                    className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 disabled:opacity-30 active:scale-95 transition text-xs font-semibold"
                   >
                     Sig →
                   </button>
@@ -336,15 +334,17 @@ export default function TournamentLanding(): React.ReactElement {
           )}
         </section>
 
-        {/* ------------------------------------------------------------------ */}
-        {/* FORMULARIO DE REGISTRO */}
-        {/* ------------------------------------------------------------------ */}
+        {/* FORMULARIO */}
         <section className="max-w-xl mx-auto">
-          <div className="bg-slate-900/80 backdrop-blur-md rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-2xl">
+          <div className="bg-neutral-900/90 rounded-2xl p-6 sm:p-8 border border-neutral-800 shadow-2xl relative overflow-hidden">
+            
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#6B1D2F] via-[#BC955C] to-[#6B1D2F]" />
+
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-white">Registro de Equipo</h2>
-              <p className="text-slate-400 text-sm mt-1">
-                Llena el formulario para registrar a tu equipo en Google Sheets
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[#BC955C]">Inscripción de Equipos</span>
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight mt-1">Registro Oficial</h2>
+              <p className="text-neutral-400 text-sm mt-1">
+                Completa tus datos para registrar el equipo y recibir los documentos por correo.
               </p>
             </div>
 
@@ -352,49 +352,53 @@ export default function TournamentLanding(): React.ReactElement {
               <div
                 className={`p-4 rounded-xl mb-6 text-sm font-medium border flex items-center gap-3 ${
                   formMessage.type === 'success'
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                    : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                    ? 'bg-emerald-950/40 text-emerald-400 border-emerald-500/40'
+                    : 'bg-rose-950/40 text-rose-400 border-rose-500/40'
                 }`}
               >
-                <span>{formMessage.type === 'success' ? '✓' : '✕'}</span>
+                <span className="font-bold">{formMessage.type === 'success' ? '✓' : '✕'}</span>
                 <span>{formMessage.text}</span>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              
+              {/* NOMBRE DE ENTRENADOR */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Nombre del Equipo
+                <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-1.5">
+                  Nombre del Entrenador
                 </label>
                 <input
                   type="text"
-                  name="teamName"
+                  name="coachName"
                   required
-                  value={formData.teamName}
+                  value={formData.coachName}
                   onChange={handleChange}
-                  placeholder="Ej. Toros UPIICSA"
-                  className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-orange-500 focus:outline-none text-sm transition"
+                  placeholder="Ej. Roberto Gómez"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl focus:ring-2 focus:ring-[#BC955C] focus:border-transparent focus:outline-none text-sm transition"
                 />
               </div>
 
+              {/* ENCARGADO DEL EQUIPO */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Nombre del Capitán
+                <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-1.5">
+                  Encargado del Equipo
                 </label>
                 <input
                   type="text"
-                  name="captainName"
+                  name="managerName"
                   required
-                  value={formData.captainName}
+                  value={formData.managerName}
                   onChange={handleChange}
                   placeholder="Ej. Carlos Mendoza"
-                  className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-orange-500 focus:outline-none text-sm transition"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl focus:ring-2 focus:ring-[#BC955C] focus:border-transparent focus:outline-none text-sm transition"
                 />
               </div>
 
+              {/* EMAIL Y TELÉFONO */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-1.5">
                     Correo Electrónico
                   </label>
                   <input
@@ -403,13 +407,13 @@ export default function TournamentLanding(): React.ReactElement {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="capitan@ipn.mx"
-                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-orange-500 focus:outline-none text-sm transition"
+                    placeholder="entrenador@ejemplo.com"
+                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl focus:ring-2 focus:ring-[#BC955C] focus:border-transparent focus:outline-none text-sm transition"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-1.5">
                     WhatsApp / Teléfono
                   </label>
                   <input
@@ -419,51 +423,33 @@ export default function TournamentLanding(): React.ReactElement {
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="5512345678"
-                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-orange-500 focus:outline-none text-sm transition"
+                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl focus:ring-2 focus:ring-[#BC955C] focus:border-transparent focus:outline-none text-sm transition"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                    Categoría
-                  </label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-orange-500 focus:outline-none text-sm text-slate-200 transition"
-                  >
-                    <option value="Varonil Libre">Varonil Libre</option>
-                    <option value="Femenil Libre">Femenil Libre</option>
-                    <option value="Mixto">Mixto</option>
-                    <option value="Inter-UPIICSA">Inter-UPIICSA</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                    N° de Jugadores
-                  </label>
-                  <input
-                    type="number"
-                    name="numPlayers"
-                    min={3}
-                    max={15}
-                    value={formData.numPlayers}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-orange-500 focus:outline-none text-sm transition"
-                  />
-                </div>
+              {/* RAMA (VARONIL / FEMENIL) */}
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-1.5">
+                  Rama
+                </label>
+                <select
+                  name="branch"
+                  value={formData.branch}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl focus:ring-2 focus:ring-[#BC955C] focus:border-transparent focus:outline-none text-sm text-neutral-200 transition"
+                >
+                  <option value="Varonil">Varonil</option>
+                  <option value="Femenil">Femenil</option>
+                </select>
               </div>
 
               <button
                 type="submit"
                 disabled={loadingForm}
-                className="w-full mt-6 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-orange-500/20 transition duration-150 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full mt-6 bg-[#6B1D2F] hover:bg-[#800020] text-white font-bold py-3.5 rounded-xl border border-[#BC955C]/40 shadow-lg transition duration-150 disabled:opacity-50 flex items-center justify-center gap-2 uppercase tracking-wider text-sm"
               >
-                {loadingForm ? 'Guardando...' : 'Completar Registro'}
+                {loadingForm ? 'Guardando Registro...' : 'Completar Registro 🏀'}
               </button>
             </form>
           </div>
@@ -479,7 +465,7 @@ export default function TournamentLanding(): React.ReactElement {
           <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center">
             <button
               onClick={() => setSelectedImage(null)}
-              className="absolute -top-12 right-0 text-slate-400 hover:text-white text-sm font-bold bg-slate-800 px-3 py-1 rounded-lg border border-slate-700"
+              className="absolute -top-12 right-0 text-neutral-300 hover:text-white text-xs font-bold bg-[#6B1D2F] px-3 py-1.5 rounded-lg border border-[#BC955C]"
             >
               ✕ Cerrar
             </button>
@@ -487,14 +473,14 @@ export default function TournamentLanding(): React.ReactElement {
               src={getImageUrl(selectedImage.driveId)}
               alt={selectedImage.title}
               onError={(e) => handleImageError(e, 0)}
-              className="max-w-full max-h-[75vh] rounded-xl object-contain shadow-2xl border border-slate-800"
+              className="max-w-full max-h-[75vh] rounded-xl object-contain shadow-2xl border border-neutral-800"
             />
             <div className="mt-4 text-center max-w-xl">
-              <h4 className="text-slate-100 font-bold text-lg capitalize">
+              <h4 className="text-white font-bold text-lg capitalize">
                 {selectedImage.title}
               </h4>
               {selectedImage.description && (
-                <p className="text-slate-300 text-sm mt-1 leading-relaxed">
+                <p className="text-neutral-300 text-sm mt-1 leading-relaxed font-light">
                   {selectedImage.description}
                 </p>
               )}
