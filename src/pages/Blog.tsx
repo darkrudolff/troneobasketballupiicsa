@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react';
 
 // URL de tu Google Apps Script de la Galería (API de Drive)
-const DRIVE_GALLERY_API_URL = 'https://script.google.com/macros/s/AKfycbzJwREzzV8UaWgtC0qHb6NR_SJ5CA9MqhtIO8zMSZvp-TSBR93XFQBa0xGqhiIHoHjI/exec';
+const DRIVE_GALLERY_API_URL = 'https://script.google.com/macros/s/AKfycbyV3wE1ai-m3WvPbBolez3JCtBvXhzQkww5tWrwH-UARMDcL2Gu3eJ8Cl-uOzgn6ruT/exec';
 
 // URL de tu Google Apps Script para guardar registros en Google Sheets
-const GOOGLE_SCRIPT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx279lbXsP32ZTUM6z-Ao6_1UEhPj_ViCQ79uPXCbnw8epduiqgbOe2Nlj8yHZ5rkLb/exec';
+const GOOGLE_SCRIPT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbylDOMYhs3KiB8NCLnVM8wTpoe7jCXRxtE3GLuBbTwy_C9FjitfEHt7m2Z7cNbm15vJ/exec';
 
 // Claves y configuración de caché local para mitigar peticiones excesivas
 const GALLERY_CACHE_KEY = 'upiicsa_tournament_gallery_v1';
