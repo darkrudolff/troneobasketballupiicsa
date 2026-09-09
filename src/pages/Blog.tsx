@@ -331,6 +331,19 @@ export default function TournamentLanding(): React.ReactElement {
                       loading="lazy"
                       decoding="async"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent opacity-90 transition-opacity pointer-events-none" />
+                    
+                    <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 pointer-events-none">
+                      <h3 className="text-xs sm:text-sm font-bold text-white capitalize group-hover:text-[#FFCC00] transition-colors line-clamp-1">
+                        {img.title}
+                      </h3>
+                      {img.description && (
+                        <p className="text-[11px] sm:text-xs text-neutral-300 mt-0.5 line-clamp-1 sm:line-clamp-2 leading-tight font-light">
+                          {img.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                     
                    
                 ))}
