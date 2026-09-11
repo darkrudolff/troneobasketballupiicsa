@@ -11,6 +11,7 @@ const GALLERY_CACHE_KEY = 'upiicsa_tournament_gallery_v1';
 const GALLERY_CACHE_TTL = 15 * 60 * 1000; // 15 minutos de caché en navegador
 
 interface FormData {
+  teamName: string; // <-- Agregado
   coachName: string;
   managerName: string;
   email: string;
@@ -45,6 +46,7 @@ export default function TournamentLanding(): React.ReactElement {
   const carouselRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState<FormData>({
+    teamName: '', // <-- Inicializado
     coachName: '',
     managerName: '',
     email: '',
@@ -184,6 +186,7 @@ export default function TournamentLanding(): React.ReactElement {
       });
 
       setFormData({
+        teamName: '', // <-- Limpiado tras envío exitoso
         coachName: '',
         managerName: '',
         email: '',
@@ -251,7 +254,7 @@ export default function TournamentLanding(): React.ReactElement {
         </div>
       </div>
 
-      {/* HERO HEADER: GUINDA IPN + ACCENTOS EN VERDE Y ORO UPIICSA */}
+      {/* HERO HEADER */}
       <header className="relative py-14 px-4 sm:px-8 bg-gradient-to-b from-[#6B1D2F] to-[#4A121A] text-center border-b-4 border-[#FFCC00] shadow-xl">
         <div className="max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#006633]/80 border border-[#FFCC00] text-[#FFCC00] text-xs font-bold uppercase tracking-widest mb-4 shadow-md">
@@ -333,8 +336,6 @@ export default function TournamentLanding(): React.ReactElement {
                     />
                     
                     <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent opacity-90 transition-opacity pointer-events-none" />
-                    
-                    
                   </div>
                 ))}
               </div>
@@ -380,7 +381,6 @@ export default function TournamentLanding(): React.ReactElement {
         <section className="max-w-xl mx-auto">
           <div className="bg-neutral-900/90 rounded-2xl p-6 sm:p-8 border border-neutral-800 shadow-2xl relative overflow-hidden">
             
-            {/* LÍNEA DE GRADIENTE: GUINDA IPN -> ORO -> VERDE UPIICSA */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#6B1D2F] via-[#FFCC00] to-[#006633]" />
 
             <div className="text-center mb-8">
@@ -406,6 +406,22 @@ export default function TournamentLanding(): React.ReactElement {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               
+              {/* NOMBRE DEL EQUIPO */}
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-1.5">
+                  Nombre del Equipo
+                </label>
+                <input
+                  type="text"
+                  name="teamName"
+                  required
+                  value={formData.teamName}
+                  onChange={handleChange}
+                  placeholder="Ej. Toros UPIICSA"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl focus:ring-2 focus:ring-[#FFCC00] focus:border-transparent focus:outline-none text-sm transition"
+                />
+              </div>
+
               {/* NOMBRE DE ENTRENADOR */}
               <div>
                 <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-1.5">
@@ -487,7 +503,7 @@ export default function TournamentLanding(): React.ReactElement {
                 </select>
               </div>
 
-              {/* BOTÓN DE ENVÍO: COMBINACIÓN VERDE UPIICSA + GUINDA */}
+              {/* BOTÓN DE ENVÍO */}
               <button
                 type="submit"
                 disabled={loadingForm}
