@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react';
 
 // URL de tu Google Apps Script de la Galería (API de Drive)
-const DRIVE_GALLERY_API_URL = 'https://script.google.com/macros/s/AKfycbzJwREzzV8UaWgtC0qHb6NR_SJ5CA9MqhtIO8zMSZvp-TSBR93XFQBa0xGqhiIHoHjI/exec';
+const DRIVE_GALLERY_API_URL = 'https://script.google.com/macros/s/AKfycbzmJb05cnlPgokfJbbxZejSOd_v-1Aj7v13kWEbLo-oykLILosiaDc2okkPq8LFkGEdrg/exec';
 
 // URL de tu Google Apps Script para guardar registros en Google Sheets
-const GOOGLE_SCRIPT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx279lbXsP32ZTUM6z-Ao6_1UEhPj_ViCQ79uPXCbnw8epduiqgbOe2Nlj8yHZ5rkLb/exec';
+const GOOGLE_SCRIPT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxn0F3z6FHqrzmqgfsMEqz9eb4tv01Gbiv9457wYrUJcfkGCyh5Ltj9993gBnaTVoYf/exec';
 
 // Claves y configuración de caché local para mitigar peticiones excesivas
 const GALLERY_CACHE_KEY = 'upiicsa_tournament_gallery_v1';
@@ -334,16 +334,7 @@ export default function TournamentLanding(): React.ReactElement {
                     
                     <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent opacity-90 transition-opacity pointer-events-none" />
                     
-                    <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 pointer-events-none">
-                      <h3 className="text-xs sm:text-sm font-bold text-white capitalize group-hover:text-[#FFCC00] transition-colors line-clamp-1">
-                        {img.title}
-                      </h3>
-                      {img.description && (
-                        <p className="text-[11px] sm:text-xs text-neutral-300 mt-0.5 line-clamp-1 sm:line-clamp-2 leading-tight font-light">
-                          {img.description}
-                        </p>
-                      )}
-                    </div>
+                    
                   </div>
                 ))}
               </div>
